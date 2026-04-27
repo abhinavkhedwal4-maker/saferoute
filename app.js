@@ -1,7 +1,7 @@
 // app.js — SafeRoute with Gemini AI chatbot
 
 // ── PASTE YOUR GEMINI API KEY HERE ──
-const GEMINI_API_KEY = "AIzaSyDP_CEFHSdsLxQKJ5jHlHHKDaSIjukgex8";
+const GEMINI_API_KEY = "AIzaSyDqHsbErBu6IFlEM_XcZbAlJPMF9xcyMO4";
 
 // ── SPLASH SCREEN ──
 window.addEventListener('load', () => {
@@ -239,7 +239,7 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ── CHATBOT (Gemini AI) ──
+// ── CHATBOT (Gemini 2.5 Flash) ──
 let chatOpen = false;
 
 function toggleChatbot() {
@@ -266,9 +266,9 @@ async function sendChat() {
   try {
     const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
 
-    // ── ONLY CHANGE: gemini-1.5-flash → gemini-2.0-flash ──
+    // ── UPDATED MODEL: gemini-2.5-flash-preview-04-17 ──
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -289,6 +289,10 @@ async function sendChat() {
     );
 
     const data = await response.json();
+
+    // Log full response to console for debugging
+    console.log('Gemini response:', data);
+
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
       || "I'm having trouble connecting right now. Please try again!";
 
@@ -296,6 +300,7 @@ async function sendChat() {
     addChatMessage(reply, 'bot');
 
   } catch(e) {
+    console.error('Chat error:', e);
     removeTypingIndicator(typingId);
     addChatMessage("Having trouble connecting. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
   }
