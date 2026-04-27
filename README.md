@@ -23,7 +23,7 @@ SafeRoute is a web app that:
 
 ## How to Run Locally
 ```bash
-git clone https://github.com/abhinavkhedwal4-maker/saferoute
+git clone https://github.com/abhinavkhedwal4-maker/saferoute.git
 cd saferoute
 npm install
 node server.js
@@ -31,7 +31,7 @@ node server.js
 Then open http://localhost:3000 in your browser.
 
 ## Live Demo
-[https://saferoute-orpin.vercel.app]
+[https://saferoute-orpin.vercel.app/]
 
 ## Team
 [Code OPS
