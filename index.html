@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SafeRoute — Navigate Safely</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-shield">🛡️</div>
+      <h1 class="splash-title">SafeRoute</h1>
+      <p class="splash-sub">Navigate with confidence. Every route, every city.</p>
+      <div class="splash-bar"><div class="splash-fill"></div></div>
+    </div>
+  </div>
+
+  <header id="main-header">
+    <div class="header-left">
+      <span class="logo-icon">🛡️</span>
+      <div>
+        <h1>SafeRoute</h1>
+        <span class="tagline">Safety-first navigation</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="city-pills" id="city-pills">
+        <span class="city-pill active" data-city="bengaluru">Bengaluru</span>
+        <span class="city-pill" data-city="delhi">Delhi</span>
+        <span class="city-pill" data-city="mumbai">Mumbai</span>
+        <span class="city-pill" data-city="hyderabad">Hyderabad</span>
+        <span class="city-pill" data-city="chennai">Chennai</span>
+        <span class="city-pill" data-city="kolkata">Kolkata</span>
+        <span class="city-pill" data-city="jaipur">Jaipur</span>
+        <span class="city-pill" data-city="lucknow">Lucknow</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="panel" id="panel">
+
+      <div class="tabs">
+        <button class="tab active" data-tab="route">🗺️ Route</button>
+        <button class="tab" data-tab="incidents">⚠️ Incidents</button>
+        <button class="tab" data-tab="crimes">🔍 Crime Data</button>
+      </div>
+
+      <div class="tab-content active" id="tab-route">
+        <div class="input-group">
+          <label for="start">📍 Starting Point</label>
+          <input type="text" id="start" placeholder="e.g. MG Road, Bengaluru" autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="end">🏁 Destination</label>
+          <input type="text" id="end" placeholder="e.g. Koramangala, Bengaluru" autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="time">🕐 Time of Travel</label>
+          <select id="time">
+            <option value="day">☀️ Daytime (6 AM – 8 PM)</option>
+            <option value="night">🌙 Nighttime (8 PM – 6 AM)</option>
+          </select>
+        </div>
+        <button class="find-btn" onclick="findSafeRoute()">
+          <span class="btn-icon">🛡️</span>
+          <span class="btn-text">Find Safe Route</span>
+          <span class="btn-pulse"></span>
+        </button>
+
+        <div id="safety-result" class="hidden">
+          <div class="result-header">
+            <span class="result-icon" id="result-icon">🛡️</span>
+            <h3>Route Safety Score</h3>
+          </div>
+          <div id="score-bar-container">
+            <div id="score-bar"></div>
+            <span id="score-number">0</span>
+          </div>
+          <p id="score-text"></p>
+          <div class="tips-section">
+            <p class="tips-title">📌 Area Intelligence</p>
+            <ul id="safety-tips"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-incidents">
+        <div class="incidents-header">
+          <h3>Notable Past Incidents</h3>
+          <p class="sub-text">Historical safety awareness for informed travel</p>
+        </div>
+        <div id="incidents-list" class="incidents-list">
+          <p class="placeholder-text">Select a city from the top bar to view incidents.</p>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-crimes">
+        <div class="incidents-header">
+          <h3>Area Crime Profile</h3>
+          <p class="sub-text">Based on reported data & community reports</p>
+        </div>
+        <div id="crimes-list" class="crimes-list">
+          <p class="placeholder-text">Select a city to view crime statistics.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="map-container">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="legend-item"><span class="dot green"></span> Safe</div>
+        <div class="legend-item"><span class="dot yellow"></span> Moderate</div>
+        <div class="legend-item"><span class="dot red"></span> Risky</div>
+      </div>
+      <button class="recenter-btn" onclick="recenterMap()" title="Re-center map">🎯</button>
+    </section>
+
+  </main>
+
+  <div id="chatbot-bubble" onclick="toggleChatbot()" title="Ask SafeRoute AI">
+    <span class="chat-icon">💬</span>
+    <span class="chat-badge" id="chat-badge">AI</span>
+  </div>
+
+  <div id="chatbot-panel" class="hidden">
+    <div class="chatbot-header">
+      <div class="chatbot-title">
+        <span>🛡️</span>
+        <div>
+          <strong>SafeRoute AI</strong>
+          <span class="online-dot"></span>
+        </div>
+      </div>
+      <button onclick="toggleChatbot()" class="close-chat">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages">
+      <div class="chat-msg bot">
+        <span class="chat-avatar">🛡️</span>
+        <div class="msg-bubble">Hi! I'm SafeRoute AI. Ask me about safety in any Indian city — areas to avoid, best routes, nighttime tips, or anything safety-related! 🌙</div>
+      </div>
+    </div>
+    <div class="chatbot-input-row">
+      <input type="text" id="chatbot-input" placeholder="Ask about safety in any city..." onkeydown="if(event.key==='Enter') sendChat()" />
+      <button onclick="sendChat()" class="send-btn">➤</button>
+    </div>
+  </div>
+
+  <script src="safety-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

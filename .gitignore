@@ -1,0 +1,8 @@
+# Don't upload the node_modules folder — it's huge and can be reinstalled
+node_modules/
+
+# Don't upload environment variable files (they may contain secrets)
+.env
+
+# Mac hidden files
+.DS_Store
