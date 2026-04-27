@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";
+const GEMINI_API_KEY = "AIzaSyCv77jAqygEvb0sAOs00SGc6vBd0VRj73M";
 
 window.addEventListener('load', () => {
   setTimeout(() => {
@@ -94,39 +94,30 @@ async function geocode(address) {
 
 async function findSafeRoute() {
   const startText = document.getElementById('start').value.trim();
-  const endText   = document.getElementById('end').value.trim();
+  const endText = document.getElementById('end').value.trim();
   const timeOfDay = document.getElementById('time').value;
-
   if (!startText || !endText) { showToast('Please enter both start and destination.'); return; }
-
   const btn = document.querySelector('.find-btn');
   btn.querySelector('.btn-text').textContent = 'Analyzing route...';
   btn.disabled = true;
-
   const [startCoords, endCoords] = await Promise.all([geocode(startText), geocode(endText)]);
-
   btn.querySelector('.btn-text').textContent = 'Find Safe Route';
   btn.disabled = false;
-
   if (!startCoords) { showToast('Could not find starting location. Try being more specific.'); return; }
-  if (!endCoords)   { showToast('Could not find destination. Try being more specific.'); return; }
-
+  if (!endCoords) { showToast('Could not find destination. Try being more specific.'); return; }
   if (startMarker) map.removeLayer(startMarker);
-  if (endMarker)   map.removeLayer(endMarker);
+  if (endMarker) map.removeLayer(endMarker);
   if (currentRoute) map.removeLayer(currentRoute);
-  if (glowRoute)   map.removeLayer(glowRoute);
-
+  if (glowRoute) map.removeLayer(glowRoute);
   const makeIcon = (color) => L.divIcon({
     className: '',
     html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid rgba(255,255,255,0.8);box-shadow:0 0 16px ${color};"></div>`,
     iconSize: [14, 14], iconAnchor: [7, 7]
   });
-
   startMarker = L.marker([startCoords.lat, startCoords.lon], { icon: makeIcon('#22d3a5') })
     .addTo(map).bindPopup(`<strong>🟢 Start</strong><br>${startText}`);
   endMarker = L.marker([endCoords.lat, endCoords.lon], { icon: makeIcon('#e63a6e') })
     .addTo(map).bindPopup(`<strong>🔴 Destination</strong><br>${endText}`);
-
   const routeUrl = `https://router.project-osrm.org/route/v1/foot/${startCoords.lon},${startCoords.lat};${endCoords.lon},${endCoords.lat}?overview=full&geometries=geojson`;
   let routeCoords;
   try {
@@ -136,22 +127,17 @@ async function findSafeRoute() {
   } catch(e) {
     routeCoords = [[startCoords.lat, startCoords.lon], [endCoords.lat, endCoords.lon]];
   }
-
   const startSafety = getSafetyScore(startText, timeOfDay);
-  const endSafety   = getSafetyScore(endText, timeOfDay);
-  const avgScore    = Math.round((startSafety.score + endSafety.score) / 2);
-
+  const endSafety = getSafetyScore(endText, timeOfDay);
+  const avgScore = Math.round((startSafety.score + endSafety.score) / 2);
   let routeColor, glowColor;
-  if (avgScore >= 75)      { routeColor = '#22d3a5'; glowColor = 'rgba(34,211,165,0.4)'; }
+  if (avgScore >= 75) { routeColor = '#22d3a5'; glowColor = 'rgba(34,211,165,0.4)'; }
   else if (avgScore >= 50) { routeColor = '#fbbf24'; glowColor = 'rgba(251,191,36,0.4)'; }
-  else                     { routeColor = '#ef4444'; glowColor = 'rgba(239,68,68,0.4)'; }
-
-  glowRoute    = L.polyline(routeCoords, { color: glowColor, weight: 14, opacity: 0.5 }).addTo(map);
+  else { routeColor = '#ef4444'; glowColor = 'rgba(239,68,68,0.4)'; }
+  glowRoute = L.polyline(routeCoords, { color: glowColor, weight: 14, opacity: 0.5 }).addTo(map);
   currentRoute = L.polyline(routeCoords, { color: routeColor, weight: 5, opacity: 0.9 }).addTo(map);
   map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
-
   showSafetyResult(avgScore, endSafety, timeOfDay);
-
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('[data-tab="route"]').classList.add('active');
@@ -161,17 +147,14 @@ async function findSafeRoute() {
 function showSafetyResult(score, safetyData, timeOfDay) {
   const resultDiv = document.getElementById('safety-result');
   resultDiv.classList.remove('hidden');
-
   const bar = document.getElementById('score-bar');
   const scoreNum = document.getElementById('score-number');
   bar.style.width = score + '%';
-
   let color;
   if (score >= 75) color = '#22d3a5';
   else if (score >= 50) color = '#fbbf24';
   else color = '#ef4444';
   bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
-
   let current = 0;
   const step = Math.ceil(score / 30);
   const timer = setInterval(() => {
@@ -179,18 +162,14 @@ function showSafetyResult(score, safetyData, timeOfDay) {
     scoreNum.textContent = current;
     if (current >= score) clearInterval(timer);
   }, 30);
-
   let label, icon;
-  if (score >= 75)      { label = 'Relatively Safe';     icon = '✅'; }
-  else if (score >= 50) { label = 'Moderate Risk';       icon = '⚠️'; }
-  else                  { label = 'High Risk — Caution'; icon = '🔴'; }
-
+  if (score >= 75) { label = 'Relatively Safe'; icon = '✅'; }
+  else if (score >= 50) { label = 'Moderate Risk'; icon = '⚠️'; }
+  else { label = 'High Risk — Caution'; icon = '🔴'; }
   document.getElementById('result-icon').textContent = icon;
   document.getElementById('score-text').textContent = `Safety Score: ${score}/100 — ${label}`;
-
   const tipsList = document.getElementById('safety-tips');
   tipsList.innerHTML = '';
-
   safetyData.landmarks.forEach((tip, i) => {
     const li = document.createElement('li');
     li.textContent = '✅ ' + tip;
@@ -203,7 +182,6 @@ function showSafetyResult(score, safetyData, timeOfDay) {
     li.style.animationDelay = `${(i + safetyData.landmarks.length) * 0.08}s`;
     tipsList.appendChild(li);
   });
-
   if (timeOfDay === 'night') {
     const li = document.createElement('li');
     li.textContent = '🌙 Share your live location with a trusted contact';
@@ -249,7 +227,7 @@ async function sendChat() {
   addTypingIndicator(typingId);
 
   try {
-    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
+    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS && CITY_CENTERS[activeCity] ? CITY_CENTERS[activeCity].name : 'India'}.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -280,6 +258,7 @@ async function sendChat() {
     addChatMessage(reply, 'bot');
 
   } catch(e) {
+    console.error('Chat error:', e);
     removeTypingIndicator(typingId);
     addChatMessage("Having trouble connecting. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
   }
