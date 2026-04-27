@@ -156,8 +156,8 @@ async function findSafeRoute() {
     routeCoords = [[startCoords.lat, startCoords.lon], [endCoords.lat, endCoords.lon]];
   }
 
-  const startSafety = getSafetyScore(startText, timeOfDay);
-  const endSafety   = getSafetyScore(endText, timeOfDay);
+  const startSafety = typeof getSafetyScore === 'function' ? getSafetyScore(startText, timeOfDay) : {score: 60};
+  const endSafety   = typeof getSafetyScore === 'function' ? getSafetyScore(endText, timeOfDay) : {score: 60};
   const avgScore    = Math.round((startSafety.score + endSafety.score) / 2);
 
   let routeColor, glowColor;
@@ -266,7 +266,7 @@ async function sendChat() {
   const input = document.getElementById('chatbot-input');
   const msg = input ? input.value.trim() : '';
   if (!msg) return;
-  input.value = '';
+  if (input) input.value = '';
 
   addChatMessage(msg, 'user');
   const typingId = 'typing-' + Date.now();
