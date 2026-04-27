@@ -31,7 +31,9 @@ node server.js
 Then open http://localhost:3000 in your browser.
 
 ## Live Demo
-[Link to your deployed app]
+[https://saferoute-orpin.vercel.app]
 
 ## Team
-[Code OPS/Abhinav Khedwal/Nishi Agarwal]
+[Code OPS
+ Members
+Abhinav Khedwal,Nishi Agarwal]
