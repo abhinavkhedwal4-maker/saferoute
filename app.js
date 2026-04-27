@@ -1,9 +1,18 @@
-// app.js — SafeRoute with Gemini AI chatbot
+const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";
 
-// ── PASTE YOUR GEMINI API KEY HERE ──
-const GEMINI_API_KEY = "AIzaSyDqHsbErBu6IFlEM_XcZbAlJPMF9xcyMO4";
+let activeCity = 'bengaluru';
 
-// ── SPLASH SCREEN ──
+const CITY_CENTERS = {
+  bengaluru: { name: "Bengaluru", lat: 12.9716, lon: 77.5946 },
+  delhi:     { name: "Delhi",     lat: 28.6139, lon: 77.2090 },
+  mumbai:    { name: "Mumbai",    lat: 19.0760, lon: 72.8777 },
+  hyderabad: { name: "Hyderabad", lat: 17.3850, lon: 78.4867 },
+  chennai:   { name: "Chennai",   lat: 13.0827, lon: 80.2707 },
+  kolkata:   { name: "Kolkata",   lat: 22.5726, lon: 88.3639 },
+  jaipur:    { name: "Jaipur",    lat: 26.9124, lon: 75.7873 },
+  lucknow:   { name: "Lucknow",   lat: 26.8467, lon: 80.9462 }
+};
+
 window.addEventListener('load', () => {
   setTimeout(() => {
     const splash = document.getElementById('splash');
@@ -12,7 +21,6 @@ window.addEventListener('load', () => {
   }, 2400);
 });
 
-// ── PARTICLE BACKGROUND ──
 (function initParticles() {
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
@@ -44,7 +52,6 @@ window.addEventListener('load', () => {
   draw();
 })();
 
-// ── MAP INIT ──
 const map = L.map('map', { zoomControl: false }).setView([12.9716, 77.5946], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
@@ -54,7 +61,6 @@ L.control.zoom({ position: 'bottomright' }).addTo(map);
 let currentRoute = null, startMarker = null, endMarker = null;
 let glowRoute = null;
 
-// ── CITY SWITCHER ──
 document.getElementById('city-pills').addEventListener('click', e => {
   const pill = e.target.closest('.city-pill');
   if (!pill) return;
@@ -71,11 +77,9 @@ document.getElementById('city-pills').addEventListener('click', e => {
   renderCrimes(activeCity);
 });
 
-// Initialize with Bengaluru
 renderIncidents('bengaluru');
 renderCrimes('bengaluru');
 
-// ── TAB SWITCHER ──
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -85,13 +89,11 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ── RECENTER ──
 function recenterMap() {
   const c = CITY_CENTERS[activeCity];
   if (c) map.flyTo([c.lat, c.lon], 13, { duration: 1 });
 }
 
-// ── GEOCODE ──
 async function geocode(address) {
   const cityName = CITY_CENTERS[activeCity]?.name || 'India';
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', ' + cityName)}&limit=1`;
@@ -103,7 +105,6 @@ async function geocode(address) {
   return null;
 }
 
-// ── FIND SAFE ROUTE ──
 async function findSafeRoute() {
   const startText = document.getElementById('start').value.trim();
   const endText   = document.getElementById('end').value.trim();
@@ -170,7 +171,6 @@ async function findSafeRoute() {
   document.getElementById('tab-route').classList.add('active');
 }
 
-// ── SHOW SAFETY RESULT ──
 function showSafetyResult(score, safetyData, timeOfDay) {
   const resultDiv = document.getElementById('safety-result');
   resultDiv.classList.remove('hidden');
@@ -227,7 +227,6 @@ function showSafetyResult(score, safetyData, timeOfDay) {
   }
 }
 
-// ── TOAST ──
 function showToast(msg) {
   const existing = document.getElementById('toast');
   if (existing) existing.remove();
@@ -239,7 +238,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ── CHATBOT (Gemini 2.5 Flash) ──
 let chatOpen = false;
 
 function toggleChatbot() {
@@ -263,46 +261,46 @@ async function sendChat() {
   const typingId = 'typing-' + Date.now();
   addTypingIndicator(typingId);
 
-  try {
-    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
+  const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
 
-    // ── UPDATED MODEL: gemini-2.5-flash-preview-04-17 ──
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: systemContext + '\n\nUser question: ' + msg }
-              ]
-            }
-          ],
-          generationConfig: {
-            maxOutputTokens: 300,
-            temperature: 0.7
-          }
-        })
+  const MAX_RETRIES = 2;
+  let attempt = 0;
+
+  while (attempt <= MAX_RETRIES) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemContext + '\n\nUser question: ' + msg }] }],
+            generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    );
 
-    const data = await response.json();
+      const data = await response.json();
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text 
+        || "Sorry, I couldn't generate a response. Try again!";
 
-    // Log full response to console for debugging
-    console.log('Gemini response:', data);
+      removeTypingIndicator(typingId);
+      addChatMessage(reply, 'bot');
+      return;
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
-      || "I'm having trouble connecting right now. Please try again!";
-
-    removeTypingIndicator(typingId);
-    addChatMessage(reply, 'bot');
-
-  } catch(e) {
-    console.error('Chat error:', e);
-    removeTypingIndicator(typingId);
-    addChatMessage("Having trouble connecting. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
+    } catch (e) {
+      attempt++;
+      if (attempt > MAX_RETRIES) {
+        removeTypingIndicator(typingId);
+        addChatMessage("Having trouble connecting right now. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
+      } else {
+        await new Promise(r => setTimeout(r, 800 * attempt));
+      }
+    }
   }
 }
 
