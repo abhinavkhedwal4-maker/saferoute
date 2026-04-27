@@ -1,6 +1,5 @@
 const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";
 
-// ── SPLASH SCREEN ──
 window.addEventListener('load', () => {
   setTimeout(() => {
     const splash = document.getElementById('splash');
@@ -9,7 +8,6 @@ window.addEventListener('load', () => {
   }, 2400);
 });
 
-// ── PARTICLE BACKGROUND ──
 (function initParticles() {
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
@@ -41,7 +39,6 @@ window.addEventListener('load', () => {
   draw();
 })();
 
-// ── MAP INIT ──
 const map = L.map('map', { zoomControl: false }).setView([12.9716, 77.5946], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
@@ -51,7 +48,6 @@ L.control.zoom({ position: 'bottomright' }).addTo(map);
 let currentRoute = null, startMarker = null, endMarker = null;
 let glowRoute = null;
 
-// ── CITY SWITCHER ──
 document.getElementById('city-pills').addEventListener('click', e => {
   const pill = e.target.closest('.city-pill');
   if (!pill) return;
@@ -68,11 +64,9 @@ document.getElementById('city-pills').addEventListener('click', e => {
   renderCrimes(activeCity);
 });
 
-// Initialize with Bengaluru
 renderIncidents('bengaluru');
 renderCrimes('bengaluru');
 
-// ── TAB SWITCHER ──
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -82,13 +76,11 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ── RECENTER ──
 function recenterMap() {
   const c = CITY_CENTERS[activeCity];
   if (c) map.flyTo([c.lat, c.lon], 13, { duration: 1 });
 }
 
-// ── GEOCODE ──
 async function geocode(address) {
   const cityName = CITY_CENTERS[activeCity]?.name || 'India';
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', ' + cityName)}&limit=1`;
@@ -100,7 +92,6 @@ async function geocode(address) {
   return null;
 }
 
-// ── FIND SAFE ROUTE ──
 async function findSafeRoute() {
   const startText = document.getElementById('start').value.trim();
   const endText   = document.getElementById('end').value.trim();
@@ -167,7 +158,6 @@ async function findSafeRoute() {
   document.getElementById('tab-route').classList.add('active');
 }
 
-// ── SHOW SAFETY RESULT ──
 function showSafetyResult(score, safetyData, timeOfDay) {
   const resultDiv = document.getElementById('safety-result');
   resultDiv.classList.remove('hidden');
@@ -224,7 +214,6 @@ function showSafetyResult(score, safetyData, timeOfDay) {
   }
 }
 
-// ── TOAST ──
 function showToast(msg) {
   const existing = document.getElementById('toast');
   if (existing) existing.remove();
@@ -236,7 +225,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ── CHATBOT (Gemini AI) ──
 let chatOpen = false;
 
 function toggleChatbot() {
@@ -264,7 +252,7 @@ async function sendChat() {
     const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
