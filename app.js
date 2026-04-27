@@ -1,7 +1,7 @@
 // app.js — SafeRoute with Gemini AI chatbot
 
 // ── PASTE YOUR GEMINI API KEY HERE ──
-const GEMINI_API_KEY = "AIzaSyAE-esGSC2cfBnXmh77akEfmtlUW__4LLw";
+const GEMINI_API_KEY = "AIzaSyBGMfOudWjk6PvAl8_7Tk-nq1L-5xflBEk";
 
 // ── SPLASH SCREEN ──
 window.addEventListener('load', () => {
