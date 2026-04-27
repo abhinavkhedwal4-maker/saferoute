@@ -307,3 +307,22 @@ function addChatMessage(text, role) {
   div.innerHTML = `
     ${role === 'bot' ? '<span class="chat-avatar">🛡️</span>' : '<span class="chat-avatar">👤</span>'}
     <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
+  `;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function addTypingIndicator(id) {
+  const messages = document.getElementById('chatbot-messages');
+  const div = document.createElement('div');
+  div.id = id;
+  div.className = 'chat-msg bot';
+  div.innerHTML = `<span class="chat-avatar">🛡️</span><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTypingIndicator(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
