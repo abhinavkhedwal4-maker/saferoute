@@ -1,37 +1,20 @@
-const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";   // ← Replace with your real key
+const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";
 
-let activeCity = 'bengaluru';
-
-const CITY_CENTERS = {
-  bengaluru: { name: "Bengaluru", lat: 12.9716, lon: 77.5946 },
-  delhi:     { name: "Delhi",     lat: 28.6139, lon: 77.2090 },
-  mumbai:    { name: "Mumbai",    lat: 19.0760, lon: 72.8777 },
-  hyderabad: { name: "Hyderabad", lat: 17.3850, lon: 78.4867 },
-  chennai:   { name: "Chennai",   lat: 13.0827, lon: 80.2707 },
-  kolkata:   { name: "Kolkata",   lat: 22.5726, lon: 88.3639 },
-  jaipur:    { name: "Jaipur",    lat: 26.9124, lon: 75.7873 },
-  lucknow:   { name: "Lucknow",   lat: 26.8467, lon: 80.9462 }
-};
-
+// ── SPLASH SCREEN ──
 window.addEventListener('load', () => {
   setTimeout(() => {
     const splash = document.getElementById('splash');
-    if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => splash.style.display = 'none', 900);
-    }
+    splash.classList.add('fade-out');
+    setTimeout(() => splash.style.display = 'none', 900);
   }, 2400);
 });
 
+// ── PARTICLE BACKGROUND ──
 (function initParticles() {
   const canvas = document.getElementById('particles-canvas');
-  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W, H, particles = [];
-  function resize() { 
-    W = canvas.width = window.innerWidth; 
-    H = canvas.height = window.innerHeight; 
-  }
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
   window.addEventListener('resize', resize);
   resize();
   for (let i = 0; i < 60; i++) {
@@ -58,6 +41,7 @@ window.addEventListener('load', () => {
   draw();
 })();
 
+// ── MAP INIT ──
 const map = L.map('map', { zoomControl: false }).setView([12.9716, 77.5946], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
@@ -67,6 +51,7 @@ L.control.zoom({ position: 'bottomright' }).addTo(map);
 let currentRoute = null, startMarker = null, endMarker = null;
 let glowRoute = null;
 
+// ── CITY SWITCHER ──
 document.getElementById('city-pills').addEventListener('click', e => {
   const pill = e.target.closest('.city-pill');
   if (!pill) return;
@@ -79,13 +64,15 @@ document.getElementById('city-pills').addEventListener('click', e => {
     document.getElementById('start').placeholder = `e.g. Area in ${c.name}`;
     document.getElementById('end').placeholder = `e.g. Destination in ${c.name}`;
   }
-  if (typeof renderIncidents === 'function') renderIncidents(activeCity);
-  if (typeof renderCrimes === 'function') renderCrimes(activeCity);
+  renderIncidents(activeCity);
+  renderCrimes(activeCity);
 });
 
-if (typeof renderIncidents === 'function') renderIncidents('bengaluru');
-if (typeof renderCrimes === 'function') renderCrimes('bengaluru');
+// Initialize with Bengaluru
+renderIncidents('bengaluru');
+renderCrimes('bengaluru');
 
+// ── TAB SWITCHER ──
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -95,11 +82,13 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+// ── RECENTER ──
 function recenterMap() {
   const c = CITY_CENTERS[activeCity];
   if (c) map.flyTo([c.lat, c.lon], 13, { duration: 1 });
 }
 
+// ── GEOCODE ──
 async function geocode(address) {
   const cityName = CITY_CENTERS[activeCity]?.name || 'India';
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', ' + cityName)}&limit=1`;
@@ -111,6 +100,7 @@ async function geocode(address) {
   return null;
 }
 
+// ── FIND SAFE ROUTE ──
 async function findSafeRoute() {
   const startText = document.getElementById('start').value.trim();
   const endText   = document.getElementById('end').value.trim();
@@ -156,8 +146,8 @@ async function findSafeRoute() {
     routeCoords = [[startCoords.lat, startCoords.lon], [endCoords.lat, endCoords.lon]];
   }
 
-  const startSafety = typeof getSafetyScore === 'function' ? getSafetyScore(startText, timeOfDay) : {score: 60};
-  const endSafety   = typeof getSafetyScore === 'function' ? getSafetyScore(endText, timeOfDay) : {score: 60};
+  const startSafety = getSafetyScore(startText, timeOfDay);
+  const endSafety   = getSafetyScore(endText, timeOfDay);
   const avgScore    = Math.round((startSafety.score + endSafety.score) / 2);
 
   let routeColor, glowColor;
@@ -177,64 +167,64 @@ async function findSafeRoute() {
   document.getElementById('tab-route').classList.add('active');
 }
 
+// ── SHOW SAFETY RESULT ──
 function showSafetyResult(score, safetyData, timeOfDay) {
   const resultDiv = document.getElementById('safety-result');
-  if (!resultDiv) return;
   resultDiv.classList.remove('hidden');
 
   const bar = document.getElementById('score-bar');
   const scoreNum = document.getElementById('score-number');
-  if (bar) bar.style.width = score + '%';
+  bar.style.width = score + '%';
 
-  let color = score >= 75 ? '#22d3a5' : score >= 50 ? '#fbbf24' : '#ef4444';
-  if (bar) bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
+  let color;
+  if (score >= 75) color = '#22d3a5';
+  else if (score >= 50) color = '#fbbf24';
+  else color = '#ef4444';
+  bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
 
   let current = 0;
   const step = Math.ceil(score / 30);
   const timer = setInterval(() => {
     current = Math.min(current + step, score);
-    if (scoreNum) scoreNum.textContent = current;
+    scoreNum.textContent = current;
     if (current >= score) clearInterval(timer);
   }, 30);
 
-  let label = score >= 75 ? 'Relatively Safe' : score >= 50 ? 'Moderate Risk' : 'High Risk — Caution';
-  let icon = score >= 75 ? '✅' : score >= 50 ? '⚠️' : '🔴';
+  let label, icon;
+  if (score >= 75)      { label = 'Relatively Safe';     icon = '✅'; }
+  else if (score >= 50) { label = 'Moderate Risk';       icon = '⚠️'; }
+  else                  { label = 'High Risk — Caution'; icon = '🔴'; }
 
-  const resultIcon = document.getElementById('result-icon');
-  const scoreText = document.getElementById('score-text');
-  if (resultIcon) resultIcon.textContent = icon;
-  if (scoreText) scoreText.textContent = `Safety Score: ${score}/100 — ${label}`;
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('score-text').textContent = `Safety Score: ${score}/100 — ${label}`;
 
   const tipsList = document.getElementById('safety-tips');
-  if (tipsList) {
-    tipsList.innerHTML = '';
-    if (safetyData && safetyData.landmarks) {
-      safetyData.landmarks.forEach((tip, i) => {
-        const li = document.createElement('li');
-        li.textContent = '✅ ' + tip;
-        li.style.animationDelay = `${i * 0.08}s`;
-        tipsList.appendChild(li);
-      });
-    }
-    if (safetyData && safetyData.risks) {
-      safetyData.risks.forEach((risk, i) => {
-        const li = document.createElement('li');
-        li.textContent = '⚠️ ' + risk;
-        li.style.animationDelay = `${(i + (safetyData.landmarks ? safetyData.landmarks.length : 0)) * 0.08}s`;
-        tipsList.appendChild(li);
-      });
-    }
-    if (timeOfDay === 'night') {
-      const li = document.createElement('li');
-      li.textContent = '🌙 Share your live location with a trusted contact';
-      tipsList.appendChild(li);
-      const li2 = document.createElement('li');
-      li2.textContent = '📞 Emergency: 112 (Police), 1091 (Women helpline)';
-      tipsList.appendChild(li2);
-    }
+  tipsList.innerHTML = '';
+
+  safetyData.landmarks.forEach((tip, i) => {
+    const li = document.createElement('li');
+    li.textContent = '✅ ' + tip;
+    li.style.animationDelay = `${i * 0.08}s`;
+    tipsList.appendChild(li);
+  });
+  safetyData.risks.forEach((risk, i) => {
+    const li = document.createElement('li');
+    li.textContent = '⚠️ ' + risk;
+    li.style.animationDelay = `${(i + safetyData.landmarks.length) * 0.08}s`;
+    tipsList.appendChild(li);
+  });
+
+  if (timeOfDay === 'night') {
+    const li = document.createElement('li');
+    li.textContent = '🌙 Share your live location with a trusted contact';
+    tipsList.appendChild(li);
+    const li2 = document.createElement('li');
+    li2.textContent = '📞 Emergency: 112 (Police), 1091 (Women helpline)';
+    tipsList.appendChild(li2);
   }
 }
 
+// ── TOAST ──
 function showToast(msg) {
   const existing = document.getElementById('toast');
   if (existing) existing.remove();
@@ -246,76 +236,69 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// ── CHATBOT (Gemini AI) ──
 let chatOpen = false;
 
 function toggleChatbot() {
   chatOpen = !chatOpen;
   const panel = document.getElementById('chatbot-panel');
-  if (panel) {
-    if (chatOpen) {
-      panel.classList.remove('hidden');
-      const input = document.getElementById('chatbot-input');
-      if (input) input.focus();
-    } else {
-      panel.classList.add('hidden');
-    }
+  if (chatOpen) {
+    panel.classList.remove('hidden');
+    document.getElementById('chatbot-input').focus();
+  } else {
+    panel.classList.add('hidden');
   }
 }
 
 async function sendChat() {
   const input = document.getElementById('chatbot-input');
-  const msg = input ? input.value.trim() : '';
+  const msg = input.value.trim();
   if (!msg) return;
-  if (input) input.value = '';
+  input.value = '';
 
   addChatMessage(msg, 'user');
   const typingId = 'typing-' + Date.now();
   addTypingIndicator(typingId);
 
-  const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
+  try {
+    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
 
-  const MAX_RETRIES = 2;
-  let attempt = 0;
-
-  while (attempt <= MAX_RETRIES) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: systemContext + '\n\nUser question: ' + msg }] }],
-            generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
-          })
-        }
-      );
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const data = await response.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text 
-        || "Sorry, I couldn't generate a response. Try again!";
-
-      removeTypingIndicator(typingId);
-      addChatMessage(reply, 'bot');
-      return;
-
-    } catch (e) {
-      attempt++;
-      if (attempt > MAX_RETRIES) {
-        removeTypingIndicator(typingId);
-        addChatMessage("Having trouble connecting right now. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
-      } else {
-        await new Promise(r => setTimeout(r, 800 * attempt));
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: systemContext + '\n\nUser question: ' + msg }
+              ]
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: 300,
+            temperature: 0.7
+          }
+        })
       }
-    }
+    );
+
+    const data = await response.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+      || "I'm having trouble connecting right now. Please try again!";
+
+    removeTypingIndicator(typingId);
+    addChatMessage(reply, 'bot');
+
+  } catch(e) {
+    removeTypingIndicator(typingId);
+    addChatMessage("Having trouble connecting. Quick tip: Always share your live location with a trusted contact when traveling at night, and keep 112 handy!", 'bot');
   }
 }
 
 function addChatMessage(text, role) {
   const messages = document.getElementById('chatbot-messages');
-  if (!messages) return;
   const div = document.createElement('div');
   div.className = `chat-msg ${role}`;
   div.innerHTML = `
@@ -328,7 +311,6 @@ function addChatMessage(text, role) {
 
 function addTypingIndicator(id) {
   const messages = document.getElementById('chatbot-messages');
-  if (!messages) return;
   const div = document.createElement('div');
   div.id = id;
   div.className = 'chat-msg bot';
