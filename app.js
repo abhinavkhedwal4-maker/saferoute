@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+const GEMINI_API_KEY = "AIzaSyBIeimC9GkS6L54T_18OKSv6-l7v7QZUVk";
 
 let activeCity = 'bengaluru';
 
