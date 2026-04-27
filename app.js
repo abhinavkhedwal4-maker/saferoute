@@ -1,17 +1,4 @@
-const GEMINI_API_KEY = "AIzaSyDQgT5Tk1BRWXv91aTGR9ZbxzPriAjjmlU";   // ← Paste your fresh key here
-
-let activeCity = 'bengaluru';
-
-const CITY_CENTERS = {
-  bengaluru: { name: "Bengaluru", lat: 12.9716, lon: 77.5946 },
-  delhi:     { name: "Delhi",     lat: 28.6139, lon: 77.2090 },
-  mumbai:    { name: "Mumbai",    lat: 19.0760, lon: 72.8777 },
-  hyderabad: { name: "Hyderabad", lat: 17.3850, lon: 78.4867 },
-  chennai:   { name: "Chennai",   lat: 13.0827, lon: 80.2707 },
-  kolkata:   { name: "Kolkata",   lat: 22.5726, lon: 88.3639 },
-  jaipur:    { name: "Jaipur",    lat: 26.9124, lon: 75.7873 },
-  lucknow:   { name: "Lucknow",   lat: 26.8467, lon: 80.9462 }
-};
+const GEMINI_API_KEY = "AIzaSyDQgT5Tk1BRWXv91aTGR9ZbxzPriAjjmlU";
 
 window.addEventListener('load', () => {
   setTimeout(() => {
@@ -240,7 +227,7 @@ async function sendChat() {
   addTypingIndicator(typingId);
 
   try {
-    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS[activeCity]?.name || 'India'}.`;
+    const systemContext = `You are SafeRoute AI, a friendly safety assistant focused on women's safety in Indian cities. You know about: Bengaluru, Delhi, Mumbai, Hyderabad, Chennai, Kolkata, Jaipur, Lucknow — safe/unsafe areas, time-based risks, crime types, practical safety tips. Emergency numbers: Police 112, Women Helpline 1091, Emergency 112. Be warm, empathetic, practical. Keep responses concise (2-4 sentences max). Never minimize safety concerns. Current city: ${CITY_CENTERS && CITY_CENTERS[activeCity] ? CITY_CENTERS[activeCity].name : 'India'}.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
