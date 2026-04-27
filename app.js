@@ -16,16 +16,22 @@ const CITY_CENTERS = {
 window.addEventListener('load', () => {
   setTimeout(() => {
     const splash = document.getElementById('splash');
-    splash.classList.add('fade-out');
-    setTimeout(() => splash.style.display = 'none', 900);
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.style.display = 'none', 900);
+    }
   }, 2400);
 });
 
 (function initParticles() {
   const canvas = document.getElementById('particles-canvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W, H, particles = [];
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function resize() { 
+    W = canvas.width = window.innerWidth; 
+    H = canvas.height = window.innerHeight; 
+  }
   window.addEventListener('resize', resize);
   resize();
   for (let i = 0; i < 60; i++) {
@@ -73,12 +79,12 @@ document.getElementById('city-pills').addEventListener('click', e => {
     document.getElementById('start').placeholder = `e.g. Area in ${c.name}`;
     document.getElementById('end').placeholder = `e.g. Destination in ${c.name}`;
   }
-  renderIncidents(activeCity);
-  renderCrimes(activeCity);
+  if (typeof renderIncidents === 'function') renderIncidents(activeCity);
+  if (typeof renderCrimes === 'function') renderCrimes(activeCity);
 });
 
-renderIncidents('bengaluru');
-renderCrimes('bengaluru');
+if (typeof renderIncidents === 'function') renderIncidents('bengaluru');
+if (typeof renderCrimes === 'function') renderCrimes('bengaluru');
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -173,57 +179,59 @@ async function findSafeRoute() {
 
 function showSafetyResult(score, safetyData, timeOfDay) {
   const resultDiv = document.getElementById('safety-result');
+  if (!resultDiv) return;
   resultDiv.classList.remove('hidden');
 
   const bar = document.getElementById('score-bar');
   const scoreNum = document.getElementById('score-number');
-  bar.style.width = score + '%';
+  if (bar) bar.style.width = score + '%';
 
-  let color;
-  if (score >= 75) color = '#22d3a5';
-  else if (score >= 50) color = '#fbbf24';
-  else color = '#ef4444';
-  bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
+  let color = score >= 75 ? '#22d3a5' : score >= 50 ? '#fbbf24' : '#ef4444';
+  if (bar) bar.style.background = `linear-gradient(90deg, ${color}88, ${color})`;
 
   let current = 0;
   const step = Math.ceil(score / 30);
   const timer = setInterval(() => {
     current = Math.min(current + step, score);
-    scoreNum.textContent = current;
+    if (scoreNum) scoreNum.textContent = current;
     if (current >= score) clearInterval(timer);
   }, 30);
 
-  let label, icon;
-  if (score >= 75)      { label = 'Relatively Safe';     icon = '✅'; }
-  else if (score >= 50) { label = 'Moderate Risk';       icon = '⚠️'; }
-  else                  { label = 'High Risk — Caution'; icon = '🔴'; }
+  let label = score >= 75 ? 'Relatively Safe' : score >= 50 ? 'Moderate Risk' : 'High Risk — Caution';
+  let icon = score >= 75 ? '✅' : score >= 50 ? '⚠️' : '🔴';
 
-  document.getElementById('result-icon').textContent = icon;
-  document.getElementById('score-text').textContent = `Safety Score: ${score}/100 — ${label}`;
+  const resultIcon = document.getElementById('result-icon');
+  const scoreText = document.getElementById('score-text');
+  if (resultIcon) resultIcon.textContent = icon;
+  if (scoreText) scoreText.textContent = `Safety Score: ${score}/100 — ${label}`;
 
   const tipsList = document.getElementById('safety-tips');
-  tipsList.innerHTML = '';
-
-  safetyData.landmarks.forEach((tip, i) => {
-    const li = document.createElement('li');
-    li.textContent = '✅ ' + tip;
-    li.style.animationDelay = `${i * 0.08}s`;
-    tipsList.appendChild(li);
-  });
-  safetyData.risks.forEach((risk, i) => {
-    const li = document.createElement('li');
-    li.textContent = '⚠️ ' + risk;
-    li.style.animationDelay = `${(i + safetyData.landmarks.length) * 0.08}s`;
-    tipsList.appendChild(li);
-  });
-
-  if (timeOfDay === 'night') {
-    const li = document.createElement('li');
-    li.textContent = '🌙 Share your live location with a trusted contact';
-    tipsList.appendChild(li);
-    const li2 = document.createElement('li');
-    li2.textContent = '📞 Emergency: 112 (Police), 1091 (Women helpline)';
-    tipsList.appendChild(li2);
+  if (tipsList) {
+    tipsList.innerHTML = '';
+    if (safetyData && safetyData.landmarks) {
+      safetyData.landmarks.forEach((tip, i) => {
+        const li = document.createElement('li');
+        li.textContent = '✅ ' + tip;
+        li.style.animationDelay = `${i * 0.08}s`;
+        tipsList.appendChild(li);
+      });
+    }
+    if (safetyData && safetyData.risks) {
+      safetyData.risks.forEach((risk, i) => {
+        const li = document.createElement('li');
+        li.textContent = '⚠️ ' + risk;
+        li.style.animationDelay = `${(i + (safetyData.landmarks ? safetyData.landmarks.length : 0)) * 0.08}s`;
+        tipsList.appendChild(li);
+      });
+    }
+    if (timeOfDay === 'night') {
+      const li = document.createElement('li');
+      li.textContent = '🌙 Share your live location with a trusted contact';
+      tipsList.appendChild(li);
+      const li2 = document.createElement('li');
+      li2.textContent = '📞 Emergency: 112 (Police), 1091 (Women helpline)';
+      tipsList.appendChild(li2);
+    }
   }
 }
 
@@ -243,17 +251,20 @@ let chatOpen = false;
 function toggleChatbot() {
   chatOpen = !chatOpen;
   const panel = document.getElementById('chatbot-panel');
-  if (chatOpen) {
-    panel.classList.remove('hidden');
-    document.getElementById('chatbot-input').focus();
-  } else {
-    panel.classList.add('hidden');
+  if (panel) {
+    if (chatOpen) {
+      panel.classList.remove('hidden');
+      const input = document.getElementById('chatbot-input');
+      if (input) input.focus();
+    } else {
+      panel.classList.add('hidden');
+    }
   }
 }
 
 async function sendChat() {
   const input = document.getElementById('chatbot-input');
-  const msg = input.value.trim();
+  const msg = input ? input.value.trim() : '';
   if (!msg) return;
   input.value = '';
 
@@ -280,9 +291,7 @@ async function sendChat() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text 
@@ -306,6 +315,7 @@ async function sendChat() {
 
 function addChatMessage(text, role) {
   const messages = document.getElementById('chatbot-messages');
+  if (!messages) return;
   const div = document.createElement('div');
   div.className = `chat-msg ${role}`;
   div.innerHTML = `
@@ -318,6 +328,7 @@ function addChatMessage(text, role) {
 
 function addTypingIndicator(id) {
   const messages = document.getElementById('chatbot-messages');
+  if (!messages) return;
   const div = document.createElement('div');
   div.id = id;
   div.className = 'chat-msg bot';
